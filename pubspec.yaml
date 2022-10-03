@@ -32,7 +32,6 @@ dependencies:
   firebase_core: ^1.19.2
   firebase_auth: ^3.4.2
   http: ^0.13.4
-  spotify_sdk: ^2.3.0
   provider: ^6.0.3
 
 dev_dependencies:

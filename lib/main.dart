@@ -18,7 +18,6 @@ class MyAppi extends StatelessWidget {
     return MaterialApp(
       title: 'Personal Expenses',
       routes: {'/': (context) => MyApp()},
-      
     );
   }
 }
@@ -29,6 +28,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  var _isLoading = false;
   @override
   void initState() {
     setData();
@@ -36,6 +36,9 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> setData() async {
+    setState(() {
+      _isLoading = true;
+    });
     final url = Uri.https(
         'todo-list-635f3-default-rtdb.firebaseio.com', '/products.json');
     try {
@@ -53,6 +56,7 @@ class _MyAppState extends State<MyApp> {
 
       setState(() {
         todoList = loadedTodo;
+        _isLoading = false;
       });
 
       print(todoList[0].title);
@@ -75,7 +79,7 @@ class _MyAppState extends State<MyApp> {
 
     print(response);
     Todo tx = Todo(
-        id: json.decode(response.body)['body'],
+        id: json.decode(response.body)['name'],
         title: title,
         chkbox: 0,
         date: date);
@@ -83,6 +87,7 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       todoList.add(tx);
     });
+    print(tx.id);
   }
 
   void showModal(BuildContext ctx) {
@@ -100,8 +105,8 @@ class _MyAppState extends State<MyApp> {
   Future<void> deleteTodo(String id) async {
     print(id);
 
-    final url = Uri.parse(
-        'https://todo-list-635f3-default-rtdb.firebaseio.com//products/$id.json');
+    final url = Uri.https(
+        'todo-list-635f3-default-rtdb.firebaseio.com', '/products/$id.json');
 
     final existIndex = todoList.indexWhere((element) => element.id == id);
     var exitsProd = todoList[existIndex];
@@ -111,16 +116,16 @@ class _MyAppState extends State<MyApp> {
 
     final response = await http.delete(url);
 
-    print(response.statusCode);
+    print(json.decode(response.body));
 
     if (response.statusCode >= 400) {
       setState(() {
-        todoList.insert(existIndex, exitsProd);
+        todoList.add(exitsProd);
       });
 
       throw HttpException('Could Not Delete the Item');
     }
-    exitsProd = null;
+
     // setState(() {
     //   todoList.removeWhere((tx) {
     //     return tx.id == id;
@@ -136,7 +141,15 @@ class _MyAppState extends State<MyApp> {
         foregroundColor: Colors.black,
         centerTitle: true,
       ),
-      body: TodoList(todoList, deleteTodo),
+      body: _isLoading
+          ? Center(
+              child: SizedBox(
+                  width: 200,
+                  child: LinearProgressIndicator(
+                    color: Colors.amber,
+                    backgroundColor: Colors.white,
+                  )))
+          : TodoList(todoList, deleteTodo),
       floatingActionButton: Builder(builder: (context) {
         return FloatingActionButton(
           backgroundColor: Colors.amber,
